@@ -68,26 +68,45 @@ def make_fragments(
 
 def make_fragments_lines(
     path: list[tuple[tuple[int, int], tuple[int, int]]],
-) -> list[list[tuple[tuple[int, int], tuple[int, int]]]]:
+) -> list[Line]:
     fragments = make_fragments(path)
     res = []
-    step_y = 2
+    
 
     for fragment in fragments:
-        line = Line(fragment[0])
-        for i in range(1, len(fragment)):
-             if fragment[i][0][1] + step_y == fragment[i][0][1]:
-                if (
-                    path[i_way][0][0] in range(path[i][0][0], path[i][1][0] + 1)
-                    or path[i_way][1][0] in range(path[i][0][0], path[i][1][0] + 1)
-                    or path[i][0][0] in range(path[i_way][0][0], path[i_way][1][0] + 1)
-                    or path[i][1][0] in range(path[i_way][0][0], path[i_way][1][0] + 1)
-                ):
-                    line.add_child(fragment[i])
-        res.append(line)
+        head = Line(fragment[0])
+        find_childs(head, fragment)
+
+        res.append(head)
 
 
     return res
+
+
+
+
+
+
+def find_childs(line: Line, path:list[tuple[tuple[int, int], tuple[int, int]]]):
+    step_y = 2
+    #   print(path)
+    for i in reversed(range(len(path))):
+        if line.path[0][1] + step_y == path[i][0][1]:
+            if (
+                line.path[0][0] in range(path[i][0][0], path[i][1][0] + 1)
+                or line.path[1][0] in range(path[i][0][0], path[i][1][0] + 1)
+                or path[i][0][0] in range(line.path[0][0], line.path[1][0] + 1)
+                or path[i][1][0] in range(line.path[0][0], line.path[1][0] + 1)
+            ):
+                line.add_child(path[i])
+                del path[i]
+
+    for child in line.childs:
+        find_childs(child, path)
+
+
+
+
 
 def make_tests() -> list[tuple[tuple[int, int], tuple[int, int]]]:
     path = [
@@ -118,7 +137,7 @@ def make_tests() -> list[tuple[tuple[int, int], tuple[int, int]]]:
 
 
 def main():
-    fragments = make_fragments(make_tests())
+    # fragments = make_fragments(make_tests())
     # print(*fragments, sep="\n")
     # line = Line(((10, 1), (100, 1)))
     # line.add_child(((200, 1), (240, 1)))
@@ -126,9 +145,9 @@ def main():
     # for child in line.childs:
     #     child.add_child(((6, 3), (105, 3)))
     #     child.add_child(((200, 3), (240, 3)))
-
+    print(*make_fragments_lines(make_tests()), sep='\n')
     # print(line)
-
+    # print(fragments)
     # lines_traversal(line)
 
 
