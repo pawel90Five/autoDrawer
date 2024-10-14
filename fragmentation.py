@@ -16,22 +16,12 @@ class Line:
         return f'{self.path}{': \n' + tabs + f'{', \n'+tabs if level >= 1 else ''}'.join([child.__str__(level + 1) for child in self.childs]) if self.childs else ''}'
 
 
-def lines_traversal(line: Line) -> None:
-    print(line.path[0])
-    for child in line.childs:
-        lines_traversal(child)
-    print(line.path[1])
-
-
 def make_fragments(
     path: list[tuple[tuple[int, int], tuple[int, int]]],
 ) -> list[list[tuple[tuple[int, int], tuple[int, int]]]]:
+    
     fragments: list[list[tuple[tuple[int, int], tuple[int, int]]]] = []
-    # start_y = path[0][0][1]
-    # end_y = path[-1][0][1]
     step_y = 2
-
-    # print(start_y, end_y)
 
     for i_way in range(len(path)):
         fragment = []
@@ -71,20 +61,11 @@ def make_fragments_lines(
 ) -> list[Line]:
     fragments = make_fragments(path)
     res = []
-    
-
     for fragment in fragments:
         head = Line(fragment[0])
         find_childs(head, fragment)
-
         res.append(head)
-
-
     return res
-
-
-
-
 
 
 def find_childs(line: Line, path:list[tuple[tuple[int, int], tuple[int, int]]]):
@@ -103,9 +84,6 @@ def find_childs(line: Line, path:list[tuple[tuple[int, int], tuple[int, int]]]):
 
     for child in line.childs:
         find_childs(child, path)
-
-
-
 
 
 def make_tests() -> list[tuple[tuple[int, int], tuple[int, int]]]:

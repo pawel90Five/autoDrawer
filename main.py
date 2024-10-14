@@ -4,6 +4,8 @@ import win32con
 from time import sleep
 
 import fragmentation
+from fragmentation import Line
+
 # fname = "images/1.png"
 # fname = 'images/2.jpg'
 resize = (880, 490)
@@ -109,7 +111,6 @@ def move_to(x, y, speed):
 
 
 def drag(x, y, dx, dy, speed):
-    
     move_to(x, y, speed)
     sleep(speed)
     # win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
@@ -137,6 +138,39 @@ def draw(
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
 
 
+def draw_lines(
+    line: Line,
+    relative: tuple[int, int] = (0, 0),
+    delay: float = 1,
+):
+    sleep(delay)
+    win32api.SetCursorPos((relative[0] + line.path[0][0], relative[1] + line.path[0][1]))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+    lines_traversal(line, line.path[1], relative)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+    
+
+
+def lines_traversal(
+    line: Line,
+    end_point: tuple[int, int],
+    relative: tuple[int, int] = (0, 0),
+) -> None:
+    for start, end in [line.path]:
+        drag(
+            relative[0] + start[0],
+            relative[1] + start[1],
+            relative[0] + end[0],
+            relative[1] + end[1],
+            0.01,
+        )
+    for child in line.childs:
+        lines_traversal(child, line.path[1], relative)
+        move_to(relative[0] + end_point[0], relative[1] + end_point[1], 0.001)
+    move_to(relative[0] + end_point[0], relative[1] + end_point[1], 0.001)
+    
+
+
 def main():
     im = ImageGrab.grabclipboard().convert("L")
     # im = Image.open(fname).convert("L")
@@ -145,27 +179,30 @@ def main():
     cnt = smooth.filter(ImageFilter.CONTOUR)
     crop = cnt.crop((1, 1, im.size[0] - 1, im.size[1] - 1))
     small = crop.resize(resize)
-    res = small.point(lambda x: 255 if x > 230 else 0)
+    res1 = small.point(lambda x: 255 if x > 230 else 0)
+    res2 = small.point(lambda x: 255 if x > 200 else 0)
+    res3 = small.point(lambda x: 255 if x > 250 else 0)
 
+    res1.show('1')
+    res2.show('2')
+    res3.show('3')
+
+    res = [res1, res2, res3][-1 + int(input("Choose which one:"))]
     # res.show()
     pixels = res.load()
 
     path: list[tuple[tuple[int, int], tuple[int, int]]] = make_path(pixels, resize)
 
     relative = (1920 + 724, 214)
-    fragments = fragmentation.make_fragments(path) 
+    # fragments = fragmentation.make_fragments_lines(fragmentation.make_tests())
+    fragments = fragmentation.make_fragments_lines(path)
     click(1920 + 586, 946)  # set tight cursor
     click(relative[0], relative[1])
-    
-    # path = []
-    # for i in range(480): 
-    #     if i % 2 == 0:
-    #         path.append(((0, i), (800, i+1)))
-    #     else:
-    #         path.append(((0, i-1), (800, i)))
-    print(len(fragments))
-    for fragment in fragments:
-        draw(fragment, relative)
+
+    amount_fragments = len(fragments)
+    for i in range(amount_fragments):
+        draw_lines(fragments[i], relative, 0.01)
+        print(f'{1+i}/{amount_fragments} fragment done')
 
 
 if __name__ == "__main__":
